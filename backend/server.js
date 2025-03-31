@@ -1,23 +1,25 @@
-const express = require("express");
-const cors = require("cors");
-const mongoose = require("mongoose");
-require("dotenv").config();
+require('dotenv').config();  // Load .env variables
+const mongoose = require('mongoose');
 
-const app = express();
-app.use(express.json());
-app.use(cors());
+// Get MongoDB URI from environment variables
+const MONGO_URI = process.env.MONGO_URI;
 
-const authRoutes = require("./routes/authRoutes");
-const projectRoutes = require("./routes/projectRoutes");
+if (!MONGO_URI) {
+    console.error("❌ MongoDB URI is missing. Set MONGO_URI in .env file.");
+    process.exit(1);
+}
 
-app.use("/api/auth", authRoutes);
-app.use("/api/projects", projectRoutes);
+async function connectDB() {
+    try {
+        await mongoose.connect(MONGO_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        console.log("✅ Connected to MongoDB Atlas");
+    } catch (err) {
+        console.error("❌ MongoDB Connection Error:", err.message);
+        process.exit(1); // Stop server on error
+    }
+}
 
-const PORT = process.env.PORT || 5000;
-mongoose
-  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => {
-    console.log("Connected to MongoDB");
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-  })
-  .catch((err) => console.log(err));
+connectDB();
